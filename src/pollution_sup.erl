@@ -32,7 +32,7 @@ init([]) ->
     ChildSpecs = [
       #{id => 'pollution_server',
         start => {pollution_gen_server, start_link, []},
-        restart => permanent,
+        restart => transient,
         shutdown =>2000,
         type => worker,
         modules => [pollution_gen_server]

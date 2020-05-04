@@ -22,26 +22,26 @@ crash() -> gen_server:cast(?MODULE, gen_server).
 addStation(Name, Cords) -> gen_server:cast(?MODULE, {addStation, [Name, Cords]}).
 addValue(Station, Date, Type, Value) -> gen_server:cast(?MODULE, {addValue, [Station, Date, Type, Value]}).
 removeValue(Station, Date, Type) ->  gen_server:cast(?MODULE, {removeValue, [Station, Date, Type]}).
+stop() -> gen_server:cast(?MODULE, stop).
 
 handle_cast({addStation, [Name, Cords]}, Monitor) -> handle_cast_result(pollution:addStation(Name, Cords, Monitor), Monitor);
 handle_cast({addValue, [Station, Date, Type, Value]}, Monitor) -> handle_cast_result(pollution:addValue(Station, Date, Type, Value, Monitor), Monitor);
 handle_cast({removeValue, [Station, Date, Type]}, Monitor) -> handle_cast_result(pollution:removeValue(Station, Date, Type, Monitor), Monitor);
-handle_cast(crash, Monitor) -> 1 / 0, {noreply, Monitor}.
+handle_cast(crash, Monitor) -> 1 / 0, {noreply, Monitor};
+handle_cast(stop, Monitor) -> {stop, normal, Monitor}.
 
 getOneValue(Station, Date, Type) -> gen_server:call(?MODULE, {getOneValue, [Station, Date, Type]}).
 getStationMean(Station, Type) -> gen_server:call(?MODULE, {getStationMean, [Station, Type]}).
 getDailyMean(Type, Date) -> gen_server:call(?MODULE, {getDailyMean, [Type, Date]}).
 getDailyOverLimit(Type, Date, Limit) -> gen_server:call(?MODULE, {getDailyOverLimit, [Type, Date, Limit]}).
 getYearlyMean(Type, Year) -> gen_server:call(?MODULE, {getYearlyMean, [Type, Year]}).
-stop() -> gen_server:call(?MODULE, terminate).
 
 handle_call({getOneValue, [Station, Date, Type]}, _From, Monitor) -> {reply, pollution:getOneValue(Station, Date, Type, Monitor), Monitor};
 handle_call({getStationMean, [Station, Type]}, _From, Monitor) -> {reply, pollution:getStationMean(Station, Type, Monitor), Monitor};
 handle_call({getDailyMean, [Type, Date]}, _From, Monitor) -> {reply, pollution:getDailyMean(Type, Date, Monitor), Monitor};
 handle_call({getDailyOverLimit, [Type, Date, Limit]}, _From, Monitor) -> {reply, pollution:getDailyOverLimit(Type, Date, Limit, Monitor), Monitor};
 handle_call({getYearlyMean, [Type, Year]}, _From, Monitor) -> {reply, pollution:getYearlyMean(Type, Year, Monitor), Monitor};
-handle_call(showMonitor, _From, Monitor) -> {reply, Monitor, Monitor};
-handle_call(terminate, _From, Monitor) -> {stop, normal, ok, Monitor}.
+handle_call(showMonitor, _From, Monitor) -> {reply, Monitor, Monitor}.
 
 handle_cast_result({error, Text}, Monitor) -> erlang:display({error, Text}), {noreply, Monitor};
 handle_cast_result(NewMonitor, _) -> {noreply, NewMonitor}.
