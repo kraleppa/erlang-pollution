@@ -27,7 +27,7 @@ defmodule PollutionData do
 
   def add_values([value | tail]) do
     name = 'station_#{value.location |> elem(0)}_#{value.location |> elem(1)}'
-    :pollution_gen_server.addValue(name, value.datetime |> elem(0), 'PM 10', value.pollutionLevel)
+    :pollution_gen_server.addValue(name, value.datetime, 'PM 10', value.pollutionLevel)
     add_values(tail)
   end
   def add_values([]), do: :ok
@@ -42,9 +42,9 @@ defmodule PollutionData do
   end
 
   def analyze() do
-    {time, value} = (&:pollution_gen_server.getDailyOverLimit/3) |> :timer.tc(['PM 10', {2017, 5, 3}, 100])
-    IO.puts("#{time} #{value}")
+    {time, value} = (&:pollution_gen_server.getStationMean/2) |> :timer.tc(['station_20.06_49.986', 'PM 10'])
+    IO.puts("#{time}, #{value}")
     {time, value} = (&:pollution_gen_server.getDailyMean/2) |> :timer.tc(['PM 10', {2017, 5, 3}])
-    IO.puts("#{time} #{value}")
+    IO.puts("#{time}, #{value}")
   end
 end

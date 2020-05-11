@@ -55,7 +55,7 @@ addValue(Tuple, Date, Type, Value, Monitor) when is_tuple(Tuple) and is_list(Typ
   addValue(Name, Date, Type, Value, Monitor);
 
 addValue(Name, Date, Type, Value, Monitor) when is_list(Name) and is_list(Type) and is_number(Value) and is_record(Monitor, monitor)->
-  case calendar:valid_date(Date) and not valueExists({Name, Date, Type}, Monitor) of
+  case not valueExists({Name, Date, Type}, Monitor) of
     true -> #monitor{stations = Monitor#monitor.stations, data = maps:put({Name, Date, Type}, Value, Monitor#monitor.data)};
     _ -> {error, "Value already exists"}
   end.
@@ -107,9 +107,9 @@ getStationMean(Name, Type, Monitor) when is_list(Name) and is_list(Type) ->
 
 %% pobiera srednia danego pomiaru danego dnia
 getDailyMean(Type, Date, Monitor) when is_list(Type) ->
-  case calendar:valid_date(Date) of
+  case is_tuple(Date) of
     true ->
-      Map = maps:filter(fun({_, KeyDate, KeyType}, _) -> (Date == KeyDate) and (Type == KeyType) end, Monitor#monitor.data),
+      Map = maps:filter(fun({_, {KeyDate, _}, KeyType}, _) -> (Date == KeyDate) and (Type == KeyType) end, Monitor#monitor.data),
       Sum = maps:fold(fun(_, Value, Acc) -> Acc + Value end, 0, Map),
       Sum / maps:size(Map);
     false -> {error, "Incorrect Date"}
@@ -117,9 +117,9 @@ getDailyMean(Type, Date, Monitor) when is_list(Type) ->
 
 %% zwraca ilosc pomiarow ktore danego dnia wyszly poza norme
 getDailyOverLimit(Type, Date, Limit, Monitor) when is_list(Type) and is_number(Limit) ->
-  case calendar:valid_date(Date) of
+  case is_tuple(Date) of
     true ->
-      F = fun({_, KeyDate, KeyType}, Value) -> (Value > Limit) and (KeyType == Type) and (Date == KeyDate) end,
+      F = fun({_, {KeyDate, _}, KeyType}, Value) -> (Value > Limit) and (KeyType == Type) and (Date == KeyDate) end,
       Map = maps:filter(F, (Monitor#monitor.data)),
       maps:size(Map);
     false -> {error, "Incorrect Date"}
@@ -127,7 +127,7 @@ getDailyOverLimit(Type, Date, Limit, Monitor) when is_list(Type) and is_number(L
 
 %% zwraca roczna srednia
 getYearlyMean(Type, Year, Monitor) when is_list(Type) and is_number(Year) ->
-  F = fun({_, {KeyYear, _, _}, KeyType}, _) -> (Year == KeyYear) and (Type == KeyType) end,
+  F = fun({_, {{KeyYear, _, _}, _}, KeyType}, _) -> (Year == KeyYear) and (Type == KeyType) end,
   Map = maps:filter(F, (Monitor#monitor.data)),
   Sum = maps:fold(fun(_, Value, Acc) -> Acc + Value end, 0, Map),
   Sum / maps:size(Map).
